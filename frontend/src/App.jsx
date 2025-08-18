@@ -3,7 +3,7 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-reac
 import StudentsPage from "./pages/StudentsPage";
 import UpdatePaymentsPage from "./pages/UpdatePaymentsPage";
 import PaymentDetailsPage from "./pages/PaymentDetailsPage";
-
+import LoginHandler from "./components/LoginHandler";
 function Nav() {
   const linkClass = ({ isActive }) =>
     "px-4 py-2 rounded-lg transition-colors duration-300 font-medium " +
@@ -53,6 +53,7 @@ export default function App() {
 
       {/* When user is signed in → show app */}
       <SignedIn>
+        <LoginHandler/>
         <header className="text-center py-6 bg-white dark:bg-gray-800 shadow-md">
           <h1 className="text-4xl font-bold text-gray-800 dark:text-white">
             Dance Fees

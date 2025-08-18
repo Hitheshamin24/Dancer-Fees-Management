@@ -1,39 +1,57 @@
-import { useEffect, useState } from 'react'
-import { fetchStudents, addStudent, deleteStudent } from '../api'
+import { useEffect, useState } from 'react';
+import { useUser } from '@clerk/clerk-react';
+import { fetchStudents, addStudent, deleteStudent } from '../api';
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState([])
-  const [name, setName] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const { user } = useUser(); // get logged-in Clerk user
+  const clerkId = user?.id;
 
+  const [students, setStudents] = useState([]);
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Load students
   async function load() {
+    if (!clerkId) return; // wait for user to load
     try {
-      setLoading(true)
-      const data = await fetchStudents('name')
-      setStudents(data)
+      setLoading(true);
+      const data = await fetchStudents('name', clerkId);
+      setStudents(data);
     } catch (e) {
-      setError(e.message)
+      setError(e.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load(); }, [clerkId]); // reload when clerkId is ready
 
+  // Add student
   async function handleAdd(e) {
-    e.preventDefault()
-    if (!name.trim()) return
-    await addStudent(name.trim())
-    setName('')
-    load()
+    e.preventDefault();
+    if (!name.trim() || !clerkId) return;
+    try {
+      await addStudent(name.trim(), clerkId);
+      setName('');
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
   }
 
+  // Delete student
   async function handleDelete(id) {
-    if (!confirm('Delete this student?')) return
-    await deleteStudent(id)
-    load()
+    if (!confirm('Delete this student?') || !clerkId) return;
+    try {
+      await deleteStudent(id, clerkId);
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
   }
+
+  if (!user) return <p>Loading user...</p>; // wait for Clerk user
 
   return (
     <div className="max-w-3xl mx-auto mt-10 p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700">
@@ -41,10 +59,7 @@ export default function StudentsPage() {
         Students
       </h2>
 
-      <form
-        onSubmit={handleAdd}
-        className="flex flex-col sm:flex-row gap-3 mb-6 justify-center"
-      >
+      <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-3 mb-6 justify-center">
         <input
           type="text"
           placeholder="New student name"
@@ -67,17 +82,17 @@ export default function StudentsPage() {
       ) : (
         <div className="flex flex-col gap-4">
           {students.length === 0 && (
-            <p className="text-gray-600 dark:text-gray-300 text-center">
-              No students yet
-            </p>
+            <p className="text-gray-600 dark:text-gray-300 text-center">No students yet</p>
           )}
 
-          {students.map((s) => (
+          {students.map((s,index) => (
             <div
               key={s._id}
               className="flex justify-between items-center p-5 bg-white dark:bg-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-200 dark:border-gray-600"
             >
-              <div>
+              <div className='flex items-center gap-4'>
+                      <div className="font-semibold text-gray-500 dark:text-gray-300">{index + 1}.</div>
+
                 <div className="font-semibold text-gray-800 dark:text-white mb-2 text-lg">
                   {s.name}
                 </div>
@@ -102,5 +117,5 @@ export default function StudentsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

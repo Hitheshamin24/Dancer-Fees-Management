@@ -1,37 +1,22 @@
-// server.js or routes/auth.js
-const express = require("express");
-const jwt = require("jsonwebtoken");
-const cors = require("cors");
-require("dotenv").config();
+const User = require('./models/User');
+const { users } = require('@clerk/clerk-sdk-node'); // If using Clerk SDK
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+app.post('/api/login', async (req, res) => {
+  const { clerkId, email, name } = req.body; // info from Clerk frontend
 
-const SECRET_KEY = process.env.JWT_SECRET || "supersecret"; // keep in .env
+  try {
+    // Check if user already exists
+    let user = await User.findOne({ clerkId });
 
-app.post("/login", (req, res) => {
-  const { username, password } = req.body;
+    if (!user) {
+      // If user doesn't exist, create it
+      user = await User.create({ clerkId, email, name });
+    }
 
-  // Change this to your own username/password
-  if (username === "hithesh" && password === "24891422hP@") {
-    const token = jwt.sign({ username }, SECRET_KEY, { expiresIn: "1h" });
-    return res.json({ token });
+    // Return success (you can also generate your own token)
+    res.json({ success: true, user });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ success: false, message: "Failed to log in" });
   }
-
-  res.status(401).json({ message: "Invalid credentials" });
 });
-
-// Verify token route
-app.get("/verify-token", (req, res) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.json({ valid: false });
-
-  const token = authHeader.split(" ")[1];
-  jwt.verify(token, SECRET_KEY, (err, decoded) => {
-    if (err) return res.json({ valid: false });
-    res.json({ valid: true });
-  });
-});
-
-app.listen(5000, () => console.log("✅ Server running on 5000"));

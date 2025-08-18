@@ -1,26 +1,35 @@
-import { useEffect, useState } from 'react'
-import { fetchPayments } from '../api'
+import { useEffect, useState } from "react";
+import { useUser } from "@clerk/clerk-react";
+import { fetchPayments } from "../api";
 
 export default function PaymentDetailsPage() {
-  const [unpaid, setUnpaid] = useState([])
-  const [paid, setPaid] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const { user } = useUser();
+  const clerkId = user?.id;
+
+  const [unpaid, setUnpaid] = useState([]);
+  const [paid, setPaid] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   async function load() {
+    if (!clerkId) return;
     try {
-      setLoading(true)
-      const data = await fetchPayments()
-      setUnpaid(data.unpaid || [])
-      setPaid(data.paid || [])
+      setLoading(true);
+      const data = await fetchPayments(clerkId);
+      setUnpaid(data.unpaid || []);
+      setPaid(data.paid || []);
     } catch (e) {
-      setError(e.message)
+      setError(e.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load();
+  }, [clerkId]);
+
+  if (!user) return <p>Loading user...</p>;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 flex flex-col items-center py-12 px-4">
@@ -30,7 +39,9 @@ export default function PaymentDetailsPage() {
         </h2>
 
         {loading ? (
-          <p className="text-gray-600 dark:text-gray-300 text-center">Loading...</p>
+          <p className="text-gray-600 dark:text-gray-300 text-center">
+            Loading...
+          </p>
         ) : error ? (
           <p className="text-red-500 text-center">{error}</p>
         ) : (
@@ -41,14 +52,18 @@ export default function PaymentDetailsPage() {
                 Not Paid
               </h3>
               {unpaid.length === 0 ? (
-                <p className="text-gray-500 dark:text-gray-300 text-center">Everyone has paid 🎉</p>
+                <p className="text-gray-500 dark:text-gray-300 text-center">
+                  Everyone has paid 🎉
+                </p>
               ) : (
-                unpaid.map(s => (
+                unpaid.map((s, index) => (
                   <div
                     key={s._id}
                     className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-600 last:border-b-0"
                   >
-                    <div className="font-medium text-gray-800 dark:text-white">{s.name}</div>
+                    <div className="font-medium text-gray-800 dark:text-white">
+                      {index + 1}. {s.name}
+                    </div>
                     <span className="px-3 py-1 rounded-full bg-gradient-to-r from-red-500 to-orange-500 text-white text-sm font-medium shadow">
                       Not Paid
                     </span>
@@ -63,14 +78,19 @@ export default function PaymentDetailsPage() {
                 Paid
               </h3>
               {paid.length === 0 ? (
-                <p className="text-gray-500 dark:text-gray-300 text-center">No paid members yet</p>
+                <p className="text-gray-500 dark:text-gray-300 text-center">
+                  No paid members yet
+                </p>
               ) : (
-                paid.map(s => (
+                paid.map((s, index) => (
                   <div
                     key={s._id}
                     className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-600 last:border-b-0"
                   >
-                    <div className="font-medium text-gray-800 dark:text-white">{s.name}</div>
+                    {" "}
+                    <div className="font-medium text-gray-800 dark:text-white">
+                      {index + 1}. {s.name}
+                    </div>
                     <span className="px-3 py-1 rounded-full bg-gradient-to-r from-green-400 to-green-600 text-white text-sm font-medium shadow">
                       Paid
                     </span>
@@ -82,5 +102,5 @@ export default function PaymentDetailsPage() {
         )}
       </div>
     </div>
-  )
+  );
 }
