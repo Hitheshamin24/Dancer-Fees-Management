@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_URL = import.meta.env.VITE_API_URL || 'https://littlefees.onrender.com';
 
 // Pass clerkId as a parameter for all requests
 export async function fetchStudents(sort, clerkId) {
