@@ -9,6 +9,7 @@ export default function UpdatePaymentsPage() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState(""); // search state
 
   // Load students for this user
   async function load() {
@@ -41,27 +42,47 @@ export default function UpdatePaymentsPage() {
 
   if (!user) return <p>Loading user...</p>;
 
+  // Apply search filter
+  const filteredStudents = students.filter((s) =>
+    s.name.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="max-w-3xl mx-auto mt-10 p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700">
       <h2 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white text-center">
         Update Payment Details
       </h2>
 
+      {/* Search */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6 justify-center">
+        <input
+          type="text"
+          placeholder="Search student..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 px-5 py-3 rounded-xl border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-400 dark:bg-gray-700 dark:text-white shadow-inner placeholder-gray-400 dark:placeholder-gray-400 transition-all duration-300"
+        />
+        <button
+          onClick={() => {}} // optional, search is instant
+          className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300"
+        >
+          Search
+        </button>
+      </div>
+
       {loading ? (
-        <p className="text-gray-600 dark:text-gray-300 text-center">
-          Loading...
-        </p>
+        <p className="text-gray-600 dark:text-gray-300 text-center">Loading...</p>
       ) : error ? (
         <p className="text-red-500 text-center">{error}</p>
       ) : (
         <div className="flex flex-col gap-4">
-          {students.length === 0 && (
+          {filteredStudents.length === 0 && (
             <p className="text-gray-600 dark:text-gray-300 text-center">
-              No students available
+              No matching students
             </p>
           )}
 
-          {students.map((s, index) => (
+          {filteredStudents.map((s, index) => (
             <div
               key={s._id}
               className="flex justify-between items-center p-5 bg-white dark:bg-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-200 dark:border-gray-600"
